@@ -3,3 +3,5 @@ pandas-ta
 yfinance
 ccxt
 requests
+python-dotenv
+python-telegram-bot

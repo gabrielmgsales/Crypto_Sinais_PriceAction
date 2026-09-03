@@ -1,8 +1,13 @@
+import argparse
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
 import ccxt
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor
-import asyncio
+
 from telegram_notifier import send_telegram_message
+
 
 def calculate_atr(df, period):
     df['high_low'] = df['high'] - df['low']
@@ -12,88 +17,116 @@ def calculate_atr(df, period):
     df['average_true_range'] = df['true_range'].rolling(window=period).mean()
     return df
 
+
 def calculate_dmi(df, period):
     df['high_diff'] = df['high'].diff()
     df['low_diff'] = df['low'].diff()
     df['up_move'] = df['high_diff'].apply(lambda x: x if x > 0 else 0)
     df['down_move'] = df['low_diff'].apply(lambda x: abs(x) if x < 0 else 0)
-    
+
     df['ema_up'] = df['up_move'].ewm(span=period).mean()
     df['ema_down'] = df['down_move'].ewm(span=period).mean()
-    
+
     df['+DI'] = (df['ema_up'] / df['average_true_range']) * 100
     df['-DI'] = (df['ema_down'] / df['average_true_range']) * 100
-    
     return df
+
 
 def calculate_dpo(df, period):
     df['dpo'] = df['close'].shift(int(period / 2) + 1).rolling(window=period).mean()
     df['dpo'] = df['close'] - df['dpo']
     return df
 
+
 def analyze_coin(coin_symbol):
     try:
-        exchange = ccxt.binance()  # Substitua 'binance' pela exchange desejada
+        exchange = ccxt.binance({'enableRateLimit': True})
         bars = exchange.fetch_ohlcv(coin_symbol, timeframe='15m', limit=100)
-        df = pd.DataFrame(bars, columns=['time', 'open', 'high', 'low', 'close', 'volume'])
-        
-        period = 14
-        df = calculate_atr(df, period)
-        df = calculate_dmi(df, period)
-        
-        period_dpo = 21  # Período para o DPO
-        df = calculate_dpo(df, period_dpo)
-        
+        df = pd.DataFrame(
+            bars,
+            columns=['time', 'open', 'high', 'low', 'close', 'volume'],
+        )
+
+        df = calculate_atr(df, 14)
+        df = calculate_dmi(df, 14)
+        df = calculate_dpo(df, 21)
+
         current_plus_di = df['+DI'].iloc[-1]
         current_minus_di = df['-DI'].iloc[-1]
         previous_plus_di = df['+DI'].iloc[-2]
         previous_minus_di = df['-DI'].iloc[-2]
-        
+
         current_dpo = df['dpo'].iloc[-1]
         previous_dpo = df['dpo'].iloc[-2]
 
-        if pd.notnull(current_plus_di) and pd.notnull(current_minus_di) and pd.notnull(previous_plus_di) and pd.notnull(previous_minus_di):
+        if all(
+            pd.notnull(value)
+            for value in (
+                current_plus_di,
+                current_minus_di,
+                previous_plus_di,
+                previous_minus_di,
+            )
+        ):
             if previous_plus_di < previous_minus_di and current_plus_di > current_minus_di:
                 return f"+DI e -DI indicando reversão de tendência para alta em {coin_symbol}"
-            elif previous_plus_di > previous_minus_di and current_plus_di < current_minus_di:
+            if previous_plus_di > previous_minus_di and current_plus_di < current_minus_di:
                 return f"-DI e +DI indicando reversão de tendência para baixa em {coin_symbol}"
-        
+
         if pd.notnull(current_dpo) and pd.notnull(previous_dpo):
             if previous_dpo < 0 and current_dpo > 0:
                 return f"DPO indicando reversão para alta em {coin_symbol}"
-            elif previous_dpo > 0 and current_dpo < 0:
+            if previous_dpo > 0 and current_dpo < 0:
                 return f"DPO indicando reversão para baixa em {coin_symbol}"
-        
-    except Exception as e:
-        print(f"Erro ao analisar {coin_symbol}: {e}")
+
+    except Exception as error:
+        print(f"Erro ao analisar {coin_symbol}: {error}")
+
     return None
 
-async def analyze_assets_async():
-    # Carregar moedas do arquivo pares_usdt.txt
-    with open('pares_usdt.txt', 'r') as file:
-        coins_list = [line.strip() for line in file.readlines() if line.strip()]
 
-    assets_with_signals = []
+def build_message(signals):
+    if not signals:
+        return "Nenhum ativo com sinal."
+
+    formatted_signals = "\n\n".join(f"- {signal}" for signal in signals)
+    return f"Ativos com sinais:\n\n{formatted_signals}"
+
+
+async def analyze_assets_async(notify=True):
+    pairs_file = Path(__file__).with_name('pares_usdt.txt')
+    with pairs_file.open('r', encoding='utf-8') as file:
+        coins_list = [line.strip() for line in file if line.strip()]
 
     with ThreadPoolExecutor() as executor:
-        results = executor.map(analyze_coin, coins_list)
-        
-        for result in results:
-            if result:
-                assets_with_signals.append(result)
+        signals = [result for result in executor.map(analyze_coin, coins_list) if result]
 
-    if assets_with_signals:
-        message = "Ativos com sinais:\n\n"
-        for asset_signal in assets_with_signals:
-            message += f"- {asset_signal}\n\n"
+    message = build_message(signals)
 
+    if notify:
         await send_telegram_message(message)
-
     else:
-        await send_telegram_message("Nenhum ativo com sinal.")
+        print(message)
 
-async def run_analysis():
-    await analyze_assets_async()
+    return signals
+
+
+async def run_analysis(notify=True):
+    return await analyze_assets_async(notify=notify)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Analisa BTC/USDT e, opcionalmente, envia o resultado pelo Telegram."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Exibe o resultado no terminal sem enviar mensagem ao Telegram.",
+    )
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    asyncio.run(run_analysis())
+    args = parse_args()
+    asyncio.run(run_analysis(notify=not args.dry_run))

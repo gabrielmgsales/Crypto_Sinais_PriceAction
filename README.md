@@ -86,18 +86,34 @@ Instale as dependências disponíveis:
 pip install -r requirements.txt
 ```
 
-> [!NOTE]
-> A configuração e a dependência do Telegram ainda serão revisadas. A versão atual não está pronta para uma instalação totalmente automatizada a partir do `requirements.txt`.
+## Configuração do Telegram
+
+Copie `.env.example` para `.env` e preencha as variáveis:
+
+```dotenv
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+```
+
+Nunca publique o arquivo `.env` ou credenciais reais no GitHub.
 
 ## Execução
 
-O ponto de entrada principal é:
+Para testar a análise e exibir o resultado somente no terminal:
+
+```bash
+python main.py --dry-run
+```
+
+Esse modo não exige configuração do Telegram e não envia mensagens.
+
+Para analisar e enviar o resultado ao Telegram:
 
 ```bash
 python main.py
 ```
 
-No estado atual, o módulo do Telegram precisa estar configurado e pode tentar enviar uma mensagem durante a importação. Para um teste seguro, sem notificações, recomenda-se aguardar a implementação do modo de diagnóstico planejado no roadmap.
+Nesse caso, as duas variáveis do Telegram precisam estar configuradas no arquivo `.env`.
 
 ## Limitações conhecidas
 
@@ -113,9 +129,9 @@ No estado atual, o módulo do Telegram precisa estar configurado e pode tentar e
 
 ## Próximas melhorias
 
-- [ ] mover credenciais para variáveis de ambiente;
-- [ ] criar um modo de diagnóstico sem Telegram;
-- [ ] corrigir o módulo de notificação;
+- [x] mover credenciais para variáveis de ambiente;
+- [x] criar um modo de diagnóstico sem Telegram;
+- [x] corrigir o módulo de notificação;
 - [ ] usar somente candles fechados;
 - [ ] revisar os cálculos dos indicadores;
 - [ ] remover código duplicado;
