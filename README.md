@@ -1,6 +1,6 @@
 # Crypto Sinais — EMA 20
 
-Monitor experimental de **BTC/USDT** desenvolvido em Python. O projeto consulta candles públicos da Binance e compara o último candle fechado no gráfico de 15 minutos com a média móvel exponencial de 20 períodos (EMA 20) para classificar o sinal como compra ou venda. O resultado pode ser exibido no terminal ou enviado ao Telegram.
+Monitor experimental de **BTC/USDT** desenvolvido em Python. O projeto consulta candles públicos da Binance e compara o último candle fechado no gráfico de 15 minutos com a média móvel exponencial de 20 períodos (EMA 20) para classificar o sinal como compra ou venda. O resultado é exibido diretamente no terminal.
 
 > [!WARNING]
 > Este é um projeto educacional e experimental. Os sinais não constituem recomendação de investimento e ainda não foram validados por um backtest completo. Não use o projeto como única base para decisões financeiras.
@@ -23,7 +23,7 @@ Fechamento do último candle encerrado < EMA 20 = VENDA (abrir posição vendida
 Fechamento do último candle encerrado = EMA 20 = NEUTRO
 ```
 
-Cada execução gera novamente a classificação correspondente enquanto o preço permanecer acima ou abaixo da EMA 20. Esse comportamento é intencional. O alerta inclui o horário UTC do candle encerrado para permitir a conferência dos dados.
+Cada execução gera novamente a classificação correspondente enquanto o preço permanecer acima ou abaixo da EMA 20. Esse comportamento é intencional. O resultado inclui o horário de Brasília do candle encerrado para permitir a conferência dos dados.
 
 No gráfico de 15 minutos, 20 candles representam aproximadamente cinco horas de mercado. Por ser exponencial, a EMA dá mais peso aos preços recentes.
 
@@ -34,9 +34,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 | Arquivo | Responsabilidade |
 | --- | --- |
 | `main.py` | fluxo principal com a estratégia EMA 20 |
-| `telegram_notifier.py` | envio opcional de notificações |
 | `pares_usdt.txt` | ativo analisado; atualmente, somente BTC/USDT |
-| `.env.example` | exemplo das variáveis de configuração |
 | `requirements.txt` | dependências Python |
 | `legacy/` | experimentos antigos, preservados como histórico e fora do fluxo principal |
 
@@ -44,8 +42,6 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 - Python 3.11 ou superior;
 - acesso à internet;
-- uma conta e um bot do Telegram, apenas se quiser receber notificações.
-
 As consultas públicas de candles não exigem chave de API da Binance.
 
 ## Instalação
@@ -81,41 +77,25 @@ Instale as dependências:
 python -m pip install -r requirements.txt
 ```
 
-## Teste seguro
+## Execução
 
-Para executar a análise e mostrar o resultado somente no terminal:
+Para executar a análise e mostrar o resultado no terminal:
 
 ```bash
-python main.py --dry-run
+python main.py
 ```
 
-Esse modo não exige configuração do Telegram, não envia mensagens e não realiza operações.
+O programa consulta apenas dados públicos e não realiza operações.
 
 Um resultado válido informa:
 
 - classificação como COMPRA, VENDA ou NEUTRO;
 - preço de fechamento;
 - valor da EMA 20;
-- horário UTC do candle analisado.
+- horário de Brasília do candle analisado.
 
 Se a consulta falhar, o programa diferencia erro de conexão, rejeição da Binance, dados insuficientes e falha inesperada.
 
-## Configuração do Telegram
-
-Copie `.env.example` para `.env` e preencha:
-
-```dotenv
-TELEGRAM_BOT_TOKEN=
-TELEGRAM_CHAT_ID=
-```
-
-Nunca publique o arquivo `.env` ou credenciais reais no GitHub.
-
-Para executar a análise e enviar o resultado ao Telegram:
-
-```bash
-python main.py
-```
 
 ## Limitações conhecidas
 
@@ -129,9 +109,7 @@ python main.py
 ## Próximas melhorias
 
 - [x] limitar a análise a BTC/USDT;
-- [x] mover credenciais para variáveis de ambiente;
-- [x] criar um modo de diagnóstico sem Telegram;
-- [x] corrigir o módulo de notificação;
+- [x] remover a integração antiga com o Telegram;
 - [x] usar somente candles fechados;
 - [x] simplificar a estratégia principal para EMA 20;
 - [ ] adicionar testes automatizados;
