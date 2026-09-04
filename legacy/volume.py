@@ -2,7 +2,6 @@ import ccxt
 import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
-from telegram_notifier import send_telegram_message
 
 async def analyze_volume_strength_15min_async(coin_symbol):
     try:
@@ -46,9 +45,9 @@ async def analyze_assets_15min_async():
         for asset_signal in assets_with_signals:
             message += f"- {asset_signal}\n\n"
 
-        await send_telegram_message(message)
+        print(message)
     else:
-        await send_telegram_message("Nenhum ativo com sinal de volume forte e candle de preço fraco (Intervalo de 15 minutos).")
+        print("Nenhum ativo com sinal de volume forte e candle de preço fraco (Intervalo de 15 minutos).")
 
 if __name__ == "__main__":
     asyncio.run(analyze_assets_15min_async())

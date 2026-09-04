@@ -1,11 +1,7 @@
-import argparse
-import asyncio
 from pathlib import Path
 
 import ccxt
 import pandas as pd
-
-from telegram_notifier import send_telegram_message
 
 
 EMA_PERIOD = 20
@@ -97,7 +93,7 @@ def build_message(results):
     return "\n\n".join(results)
 
 
-async def analyze_assets_async(notify=True):
+def analyze_assets():
     pairs_file = Path(__file__).with_name('pares_usdt.txt')
     with pairs_file.open('r', encoding='utf-8') as file:
         coins_list = [line.strip() for line in file if line.strip()]
@@ -105,33 +101,13 @@ async def analyze_assets_async(notify=True):
     results = [analyze_coin(coin) for coin in coins_list]
     message = build_message(results)
 
-    if notify:
-        await send_telegram_message(message)
-    else:
-        print(message)
-
+    print(message)
     return results
 
 
-async def run_analysis(notify=True):
-    return await analyze_assets_async(notify=notify)
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description=(
-            f"Gera sinal de compra ou venda de BTC/USDT com base na EMA "
-            f"{EMA_PERIOD} no gráfico de {TIMEFRAME}."
-        )
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Exibe o resultado no terminal sem enviar mensagem ao Telegram.",
-    )
-    return parser.parse_args()
+def run_analysis():
+    return analyze_assets()
 
 
 if __name__ == "__main__":
-    args = parse_args()
-    asyncio.run(run_analysis(notify=not args.dry_run))
+    run_analysis()
