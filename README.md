@@ -29,12 +29,19 @@ No gráfico de 15 minutos, 20 candles representam aproximadamente cinco horas de
 
 O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, altera ou encerra ordens**.
 
+## Organização das estratégias
+
+Cada estratégia deve ficar em seu próprio módulo dentro de `backend/strategies/`. Seus parâmetros pertencem exclusivamente a esse módulo e não são compartilhados automaticamente com outras estratégias.
+
+Na EMA 20, o ativo BTC/USDT, o gráfico de 15 minutos, o período 20 e a quantidade de candles estão definidos em `backend/strategies/ema_20.py`. Uma estratégia futura poderá usar outro ativo, período gráfico, indicador e conjunto de regras sem alterar esses parâmetros.
+
 ## Estrutura do repositório
 
 | Arquivo | Responsabilidade |
 | --- | --- |
-| `main.py` | fluxo principal com a estratégia EMA 20 |
-| `pares_usdt.txt` | ativo analisado; atualmente, somente BTC/USDT |
+| `main.py` | ponto de entrada que executa a estratégia selecionada |
+| `backend/strategies/ema_20.py` | lógica e parâmetros exclusivos da estratégia EMA 20 |
+| `backend/strategies/__init__.py` | pacote reservado às estratégias atuais e futuras |
 | `requirements.txt` | dependências Python |
 | `legacy/` | experimentos antigos, preservados como histórico e fora do fluxo principal |
 
@@ -42,6 +49,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 - Python 3.11 ou superior;
 - acesso à internet;
+
 As consultas públicas de candles não exigem chave de API da Binance.
 
 ## Instalação
@@ -111,6 +119,7 @@ Se a consulta falhar, o programa diferencia erro de conexão, rejeição da Bina
 - [x] limitar a análise a BTC/USDT;
 - [x] usar somente candles fechados;
 - [x] simplificar a estratégia principal para EMA 20;
+- [x] separar a EMA 20 em um módulo com parâmetros próprios;
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
 - [ ] adicionar logs estruturados;
