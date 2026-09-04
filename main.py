@@ -13,33 +13,47 @@ TIMEFRAME = '15m'
 
 
 def calculate_ema(df, period=EMA_PERIOD):
-    df['ema_20'] = df['close'].ewm(span=period, adjust=False).mean()
-    return df
+    column_name = f'ema_{period}'
+    df[column_name] = df['close'].ewm(span=period, adjust=False).mean()
+    return df, column_name
 
 
 def analyze_coin(coin_symbol):
     try:
         exchange = ccxt.binance({'enableRateLimit': True})
         bars = exchange.fetch_ohlcv(coin_symbol, timeframe=TIMEFRAME, limit=100)
+
+        minimum_candles = EMA_PERIOD + 2
+        if len(bars) < minimum_candles:
+            return (
+                f"ERRO: dados insuficientes para {coin_symbol}. "
+                f"Recebidos {len(bars)} candles; necessários pelo menos {minimum_candles}."
+            )
+
         df = pd.DataFrame(
             bars,
             columns=['time', 'open', 'high', 'low', 'close', 'volume'],
         )
-        df = calculate_ema(df)
+        df, ema_column = calculate_ema(df)
 
         # A última linha (-1) pode representar um candle ainda em formação.
         # O sinal usa somente o candle mais recente já encerrado.
         closed_candle = df.iloc[-2]
         close_price = closed_candle['close']
-        ema_20 = closed_candle['ema_20']
+        ema_value = closed_candle[ema_column]
+        candle_time = pd.to_datetime(
+            int(closed_candle['time']),
+            unit='ms',
+            utc=True,
+        ).strftime('%d/%m/%Y %H:%M UTC')
 
-        if pd.isnull(close_price) or pd.isnull(ema_20):
-            return None
+        if pd.isnull(close_price) or pd.isnull(ema_value):
+            return f"ERRO: fechamento ou EMA {EMA_PERIOD} indisponível para {coin_symbol}."
 
-        if close_price > ema_20:
+        if close_price > ema_value:
             action = 'COMPRA'
             position = 'acima'
-        elif close_price < ema_20:
+        elif close_price < ema_value:
             action = 'VENDA — abrir posição vendida'
             position = 'abaixo'
         else:
@@ -47,22 +61,31 @@ def analyze_coin(coin_symbol):
             position = 'igual à'
 
         return (
-            f"Sinal: {action}. {coin_symbol} fechou {position} EMA 20 "
-            f"no gráfico de 15 minutos. "
-            f"Fechamento: {close_price:.2f} | EMA 20: {ema_20:.2f}"
+            f"Sinal: {action}. {coin_symbol} fechou {position} EMA {EMA_PERIOD} "
+            f"no gráfico de {TIMEFRAME}. "
+            f"Fechamento: {close_price:.2f} | EMA {EMA_PERIOD}: {ema_value:.2f} | "
+            f"Candle fechado em: {candle_time}"
         )
 
+    except ccxt.NetworkError as error:
+        print(f"Detalhes da falha de conexão: {error}")
+        return f"ERRO: não foi possível conectar à Binance para analisar {coin_symbol}."
+    except ccxt.ExchangeError as error:
+        print(f"Detalhes do erro da Binance: {error}")
+        return f"ERRO: a Binance recusou os dados solicitados para {coin_symbol}."
+    except (KeyError, IndexError, TypeError, ValueError) as error:
+        print(f"Detalhes dos dados inválidos: {error}")
+        return f"ERRO: os dados recebidos para {coin_symbol} são inválidos ou incompletos."
     except Exception as error:
-        print(f"Erro ao analisar {coin_symbol}: {error}")
+        print(f"Erro inesperado ao analisar {coin_symbol}: {error}")
+        return f"ERRO: ocorreu uma falha inesperada ao analisar {coin_symbol}."
 
-    return None
 
+def build_message(results):
+    if not results:
+        return "ERRO: nenhum ativo foi configurado para análise."
 
-def build_message(signals):
-    if not signals:
-        return "Não foi possível determinar o sinal de BTC/USDT."
-
-    return "\n\n".join(signals)
+    return "\n\n".join(results)
 
 
 async def analyze_assets_async(notify=True):
@@ -70,15 +93,15 @@ async def analyze_assets_async(notify=True):
     with pairs_file.open('r', encoding='utf-8') as file:
         coins_list = [line.strip() for line in file if line.strip()]
 
-    signals = [signal for coin in coins_list if (signal := analyze_coin(coin))]
-    message = build_message(signals)
+    results = [analyze_coin(coin) for coin in coins_list]
+    message = build_message(results)
 
     if notify:
         await send_telegram_message(message)
     else:
         print(message)
 
-    return signals
+    return results
 
 
 async def run_analysis(notify=True):
@@ -87,7 +110,10 @@ async def run_analysis(notify=True):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Gera sinal de compra ou venda de BTC/USDT com base na EMA 20."
+        description=(
+            f"Gera sinal de compra ou venda de BTC/USDT com base na EMA "
+            f"{EMA_PERIOD} no gráfico de {TIMEFRAME}."
+        )
     )
     parser.add_argument(
         "--dry-run",
