@@ -33,11 +33,24 @@ def analyze_coin(coin_symbol):
         close_price = closed_candle['close']
         ema_20 = closed_candle['ema_20']
 
-        if pd.notnull(close_price) and pd.notnull(ema_20) and close_price > ema_20:
-            return (
-                f"{coin_symbol} fechou acima da EMA 20 no gráfico de 15 minutos. "
-                f"Fechamento: {close_price:.2f} | EMA 20: {ema_20:.2f}"
-            )
+        if pd.isnull(close_price) or pd.isnull(ema_20):
+            return None
+
+        if close_price > ema_20:
+            action = 'COMPRA'
+            position = 'acima'
+        elif close_price < ema_20:
+            action = 'VENDA — abrir posição vendida'
+            position = 'abaixo'
+        else:
+            action = 'NEUTRO'
+            position = 'igual à'
+
+        return (
+            f"Sinal: {action}. {coin_symbol} fechou {position} EMA 20 "
+            f"no gráfico de 15 minutos. "
+            f"Fechamento: {close_price:.2f} | EMA 20: {ema_20:.2f}"
+        )
 
     except Exception as error:
         print(f"Erro ao analisar {coin_symbol}: {error}")
@@ -47,10 +60,9 @@ def analyze_coin(coin_symbol):
 
 def build_message(signals):
     if not signals:
-        return "BTC/USDT não fechou acima da EMA 20."
+        return "Não foi possível determinar o sinal de BTC/USDT."
 
-    formatted_signals = "\n\n".join(f"- {signal}" for signal in signals)
-    return f"Sinal de alta pela EMA 20:\n\n{formatted_signals}"
+    return "\n\n".join(signals)
 
 
 async def analyze_assets_async(notify=True):
@@ -75,7 +87,7 @@ async def run_analysis(notify=True):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Analisa se BTC/USDT fechou acima da EMA 20."
+        description="Gera sinal de compra ou venda de BTC/USDT com base na EMA 20."
     )
     parser.add_argument(
         "--dry-run",
