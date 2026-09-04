@@ -42,7 +42,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 ## Requisitos
 
-- Python 3.10 ou superior;
+- Python 3.11 ou superior;
 - acesso à internet;
 - uma conta e um bot do Telegram, apenas se quiser receber notificações.
 
