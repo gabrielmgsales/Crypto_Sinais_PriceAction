@@ -37,7 +37,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 | `pares_usdt.txt` | ativo analisado; atualmente, somente BTC/USDT |
 | `.env.example` | exemplo das variáveis de configuração |
 | `requirements.txt` | dependências Python |
-| `dmi.py`, `dpo.py`, `rsi.py` e `volume.py` | experimentos antigos, preservados como histórico e fora do fluxo principal |
+| `legacy/` | experimentos antigos, preservados como histórico e fora do fluxo principal |
 
 ## Requisitos
 
@@ -129,7 +129,7 @@ python main.py
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
 - [ ] adicionar logs e tratamento de falhas;
-- [ ] revisar ou arquivar os scripts experimentais antigos.
+- [x] separar os scripts experimentais antigos em `legacy/`.
 
 ## Licença
 
