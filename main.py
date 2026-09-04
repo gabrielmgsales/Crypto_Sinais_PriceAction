@@ -51,7 +51,9 @@ def analyze_coin(coin_symbol):
             int(closed_candle['time']),
             unit='ms',
             utc=True,
-        ).strftime('%d/%m/%Y %H:%M UTC')
+        ).tz_convert('America/Sao_Paulo').strftime(
+            '%d/%m/%Y %H:%M (horário de Brasília)'
+        )
 
         if pd.isnull(close_price) or pd.isnull(ema_value):
             return f"ERRO: fechamento ou EMA {EMA_PERIOD} indisponível para {coin_symbol}."
