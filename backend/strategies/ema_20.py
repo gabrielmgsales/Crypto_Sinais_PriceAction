@@ -4,10 +4,27 @@ import pandas as pd
 
 STRATEGY_ID = 'ema-20'
 STRATEGY_NAME = 'Estratégia EMA 20'
+STRATEGY_DESCRIPTION = 'Compra acima da EMA 20 e venda abaixo da EMA 20.'
+STRATEGY_STATUS = 'available'
 SYMBOL = 'BTCUSDT'
 TIMEFRAME = '15m'
 EMA_PERIOD = 20
 CANDLE_LIMIT = 100
+
+
+def get_metadata():
+    return {
+        'id': STRATEGY_ID,
+        'name': STRATEGY_NAME,
+        'description': STRATEGY_DESCRIPTION,
+        'status': STRATEGY_STATUS,
+        'parameters': {
+            'symbol': SYMBOL,
+            'timeframe': TIMEFRAME,
+            'ema_period': EMA_PERIOD,
+            'candle_limit': CANDLE_LIMIT,
+        },
+    }
 
 
 def calculate_ema(df, period=EMA_PERIOD):

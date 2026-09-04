@@ -1,8 +1,8 @@
-from backend.strategies.ema_20 import run_strategy
+from backend.strategies.registry import DEFAULT_STRATEGY_ID, run_strategy
 
 
 def main():
-    result = run_strategy()
+    result = run_strategy(DEFAULT_STRATEGY_ID)
     print(result)
     return result
 
