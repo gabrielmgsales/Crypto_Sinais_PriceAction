@@ -109,7 +109,6 @@ Se a consulta falhar, o programa diferencia erro de conexão, rejeição da Bina
 ## Próximas melhorias
 
 - [x] limitar a análise a BTC/USDT;
-- [x] remover a integração antiga com o Telegram;
 - [x] usar somente candles fechados;
 - [x] simplificar a estratégia principal para EMA 20;
 - [ ] adicionar testes automatizados;
