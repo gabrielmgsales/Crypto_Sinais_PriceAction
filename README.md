@@ -33,6 +33,8 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 Cada estratégia deve ficar em seu próprio módulo dentro de `backend/strategies/`. Seus parâmetros pertencem exclusivamente a esse módulo e não são compartilhados automaticamente com outras estratégias.
 
+O arquivo `backend/strategies/registry.py` mantém o catálogo usado para listar, consultar e executar as estratégias disponíveis. O catálogo guarda apenas a ligação com cada módulo; os parâmetros continuam sob responsabilidade da própria estratégia.
+
 Na EMA 20, o ativo BTC/USDT, o gráfico de 15 minutos, o período 20 e a quantidade de candles estão definidos em `backend/strategies/ema_20.py`. Uma estratégia futura poderá usar outro ativo, período gráfico, indicador e conjunto de regras sem alterar esses parâmetros.
 
 ## Estrutura do repositório
@@ -41,6 +43,7 @@ Na EMA 20, o ativo BTC/USDT, o gráfico de 15 minutos, o período 20 e a quantid
 | --- | --- |
 | `main.py` | ponto de entrada que executa a estratégia selecionada |
 | `backend/strategies/ema_20.py` | lógica e parâmetros exclusivos da estratégia EMA 20 |
+| `backend/strategies/registry.py` | catálogo central usado para listar e executar estratégias |
 | `backend/strategies/__init__.py` | pacote reservado às estratégias atuais e futuras |
 | `requirements.txt` | dependências Python |
 | `legacy/` | experimentos antigos, preservados como histórico e fora do fluxo principal |
@@ -120,6 +123,7 @@ Se a consulta falhar, o programa diferencia erro de conexão, rejeição da Bina
 - [x] usar somente candles fechados;
 - [x] simplificar a estratégia principal para EMA 20;
 - [x] separar a EMA 20 em um módulo com parâmetros próprios;
+- [x] criar o catálogo central de estratégias;
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
 - [ ] adicionar logs estruturados;
