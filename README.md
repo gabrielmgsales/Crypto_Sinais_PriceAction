@@ -23,7 +23,7 @@ Fechamento do último candle encerrado < EMA 20 = VENDA (abrir posição vendida
 Fechamento do último candle encerrado = EMA 20 = NEUTRO
 ```
 
-Cada execução gera novamente a classificação correspondente enquanto o preço permanecer acima ou abaixo da EMA 20. Esse comportamento é intencional.
+Cada execução gera novamente a classificação correspondente enquanto o preço permanecer acima ou abaixo da EMA 20. Esse comportamento é intencional. O alerta inclui o horário UTC do candle encerrado para permitir a conferência dos dados.
 
 No gráfico de 15 minutos, 20 candles representam aproximadamente cinco horas de mercado. Por ser exponencial, a EMA dá mais peso aos preços recentes.
 
@@ -91,6 +91,15 @@ python main.py --dry-run
 
 Esse modo não exige configuração do Telegram, não envia mensagens e não realiza operações.
 
+Um resultado válido informa:
+
+- classificação como COMPRA, VENDA ou NEUTRO;
+- preço de fechamento;
+- valor da EMA 20;
+- horário UTC do candle analisado.
+
+Se a consulta falhar, o programa diferencia erro de conexão, rejeição da Binance, dados insuficientes e falha inesperada.
+
 ## Configuração do Telegram
 
 Copie `.env.example` para `.env` e preencha:
@@ -127,7 +136,7 @@ python main.py
 - [x] simplificar a estratégia principal para EMA 20;
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
-- [ ] adicionar logs e tratamento de falhas;
+- [ ] adicionar logs estruturados;\n- [x] diferenciar falhas de conexão, da Binance e de dados;
 - [x] separar os scripts experimentais antigos em `legacy/`;
 - [x] remover dependências não utilizadas e fixar as versões testadas.
 
