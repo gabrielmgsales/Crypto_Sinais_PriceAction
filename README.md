@@ -136,7 +136,8 @@ python main.py
 - [x] simplificar a estratégia principal para EMA 20;
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
-- [ ] adicionar logs estruturados;\n- [x] diferenciar falhas de conexão, da Binance e de dados;
+- [ ] adicionar logs estruturados;
+- [x] diferenciar falhas de conexão, da Binance e de dados;
 - [x] separar os scripts experimentais antigos em `legacy/`;
 - [x] remover dependências não utilizadas e fixar as versões testadas.
 
