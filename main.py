@@ -18,6 +18,12 @@ def calculate_ema(df, period=EMA_PERIOD):
     return df, column_name
 
 
+def format_usdt(value):
+    formatted_value = f"{value:,.2f}"
+    brazilian_value = formatted_value.replace(',', 'X').replace('.', ',').replace('X', '.')
+    return f"US$ {brazilian_value} (USDT)"
+
+
 def analyze_coin(coin_symbol):
     try:
         exchange = ccxt.binance({'enableRateLimit': True})
@@ -63,7 +69,8 @@ def analyze_coin(coin_symbol):
         return (
             f"Sinal: {action}. {coin_symbol} fechou {position} EMA {EMA_PERIOD} "
             f"no gráfico de {TIMEFRAME}. "
-            f"Fechamento: {close_price:.2f} | EMA {EMA_PERIOD}: {ema_value:.2f} | "
+            f"Fechamento: {format_usdt(close_price)} | "
+            f"EMA {EMA_PERIOD}: {format_usdt(ema_value)} | "
             f"Candle fechado em: {candle_time}"
         )
 
