@@ -20,7 +20,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 ## Estratégia atual
 
-O arquivo `main.py` procura os seguintes eventos:
+O arquivo `main.py` compara os dois últimos candles encerrados, ignorando o candle ainda em formação, e procura os seguintes eventos:
 
 | Indicador | Possível sinal de alta | Possível sinal de baixa |
 | --- | --- | --- |
@@ -132,7 +132,7 @@ Nesse caso, as duas variáveis do Telegram precisam estar configuradas no arquiv
 - [x] mover credenciais para variáveis de ambiente;
 - [x] criar um modo de diagnóstico sem Telegram;
 - [x] corrigir o módulo de notificação;
-- [ ] usar somente candles fechados;
+- [x] usar somente candles fechados;
 - [ ] revisar os cálculos dos indicadores;
 - [ ] remover código duplicado;
 - [ ] adicionar logs e tratamento de falhas;
