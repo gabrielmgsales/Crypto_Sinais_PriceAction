@@ -1,6 +1,5 @@
 import argparse
 import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import ccxt
@@ -9,77 +8,36 @@ import pandas as pd
 from telegram_notifier import send_telegram_message
 
 
-def calculate_atr(df, period):
-    df['high_low'] = df['high'] - df['low']
-    df['high_close'] = abs(df['high'] - df['close'].shift())
-    df['low_close'] = abs(df['low'] - df['close'].shift())
-    df['true_range'] = df[['high_low', 'high_close', 'low_close']].max(axis=1)
-    df['average_true_range'] = df['true_range'].rolling(window=period).mean()
-    return df
+EMA_PERIOD = 20
+TIMEFRAME = '15m'
 
 
-def calculate_dmi(df, period):
-    df['high_diff'] = df['high'].diff()
-    df['low_diff'] = df['low'].diff()
-    df['up_move'] = df['high_diff'].apply(lambda x: x if x > 0 else 0)
-    df['down_move'] = df['low_diff'].apply(lambda x: abs(x) if x < 0 else 0)
-
-    df['ema_up'] = df['up_move'].ewm(span=period).mean()
-    df['ema_down'] = df['down_move'].ewm(span=period).mean()
-
-    df['+DI'] = (df['ema_up'] / df['average_true_range']) * 100
-    df['-DI'] = (df['ema_down'] / df['average_true_range']) * 100
-    return df
-
-
-def calculate_dpo(df, period):
-    df['dpo'] = df['close'].shift(int(period / 2) + 1).rolling(window=period).mean()
-    df['dpo'] = df['close'] - df['dpo']
+def calculate_ema(df, period=EMA_PERIOD):
+    df['ema_20'] = df['close'].ewm(span=period, adjust=False).mean()
     return df
 
 
 def analyze_coin(coin_symbol):
     try:
         exchange = ccxt.binance({'enableRateLimit': True})
-        bars = exchange.fetch_ohlcv(coin_symbol, timeframe='15m', limit=100)
+        bars = exchange.fetch_ohlcv(coin_symbol, timeframe=TIMEFRAME, limit=100)
         df = pd.DataFrame(
             bars,
             columns=['time', 'open', 'high', 'low', 'close', 'volume'],
         )
-
-        df = calculate_atr(df, 14)
-        df = calculate_dmi(df, 14)
-        df = calculate_dpo(df, 21)
+        df = calculate_ema(df)
 
         # A última linha (-1) pode representar um candle ainda em formação.
-        # Comparamos somente os dois candles já encerrados.
-        current_plus_di = df['+DI'].iloc[-2]
-        current_minus_di = df['-DI'].iloc[-2]
-        previous_plus_di = df['+DI'].iloc[-3]
-        previous_minus_di = df['-DI'].iloc[-3]
+        # O sinal usa somente o candle mais recente já encerrado.
+        closed_candle = df.iloc[-2]
+        close_price = closed_candle['close']
+        ema_20 = closed_candle['ema_20']
 
-        current_dpo = df['dpo'].iloc[-2]
-        previous_dpo = df['dpo'].iloc[-3]
-
-        if all(
-            pd.notnull(value)
-            for value in (
-                current_plus_di,
-                current_minus_di,
-                previous_plus_di,
-                previous_minus_di,
+        if pd.notnull(close_price) and pd.notnull(ema_20) and close_price > ema_20:
+            return (
+                f"{coin_symbol} fechou acima da EMA 20 no gráfico de 15 minutos. "
+                f"Fechamento: {close_price:.2f} | EMA 20: {ema_20:.2f}"
             )
-        ):
-            if previous_plus_di < previous_minus_di and current_plus_di > current_minus_di:
-                return f"+DI e -DI indicando reversão de tendência para alta em {coin_symbol}"
-            if previous_plus_di > previous_minus_di and current_plus_di < current_minus_di:
-                return f"-DI e +DI indicando reversão de tendência para baixa em {coin_symbol}"
-
-        if pd.notnull(current_dpo) and pd.notnull(previous_dpo):
-            if previous_dpo < 0 and current_dpo > 0:
-                return f"DPO indicando reversão para alta em {coin_symbol}"
-            if previous_dpo > 0 and current_dpo < 0:
-                return f"DPO indicando reversão para baixa em {coin_symbol}"
 
     except Exception as error:
         print(f"Erro ao analisar {coin_symbol}: {error}")
@@ -89,10 +47,10 @@ def analyze_coin(coin_symbol):
 
 def build_message(signals):
     if not signals:
-        return "Nenhum ativo com sinal."
+        return "BTC/USDT não fechou acima da EMA 20."
 
     formatted_signals = "\n\n".join(f"- {signal}" for signal in signals)
-    return f"Ativos com sinais:\n\n{formatted_signals}"
+    return f"Sinal de alta pela EMA 20:\n\n{formatted_signals}"
 
 
 async def analyze_assets_async(notify=True):
@@ -100,9 +58,7 @@ async def analyze_assets_async(notify=True):
     with pairs_file.open('r', encoding='utf-8') as file:
         coins_list = [line.strip() for line in file if line.strip()]
 
-    with ThreadPoolExecutor() as executor:
-        signals = [result for result in executor.map(analyze_coin, coins_list) if result]
-
+    signals = [signal for coin in coins_list if (signal := analyze_coin(coin))]
     message = build_message(signals)
 
     if notify:
@@ -119,7 +75,7 @@ async def run_analysis(notify=True):
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Analisa BTC/USDT e, opcionalmente, envia o resultado pelo Telegram."
+        description="Analisa se BTC/USDT fechou acima da EMA 20."
     )
     parser.add_argument(
         "--dry-run",
