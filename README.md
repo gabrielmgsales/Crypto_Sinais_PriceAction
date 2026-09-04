@@ -1,6 +1,6 @@
 # Crypto Sinais — EMA 20
 
-Monitor experimental de **BTC/USDT** desenvolvido em Python. O projeto consulta candles públicos da Binance e verifica se o último candle fechado no gráfico de 15 minutos terminou acima da média móvel exponencial de 20 períodos (EMA 20). O resultado pode ser exibido no terminal ou enviado ao Telegram.
+Monitor experimental de **BTC/USDT** desenvolvido em Python. O projeto consulta candles públicos da Binance e compara o último candle fechado no gráfico de 15 minutos com a média móvel exponencial de 20 períodos (EMA 20) para classificar o sinal como compra ou venda. O resultado pode ser exibido no terminal ou enviado ao Telegram.
 
 > [!WARNING]
 > Este é um projeto educacional e experimental. Os sinais não constituem recomendação de investimento e ainda não foram validados por um backtest completo. Não use o projeto como única base para decisões financeiras.
@@ -13,16 +13,17 @@ A estratégia principal usa somente a **EMA 20**:
 2. calcula a EMA 20 sobre os preços de fechamento;
 3. ignora o candle atual, que pode ainda estar em formação;
 4. compara o fechamento do último candle encerrado com a EMA 20;
-5. gera sinal de alta quando o fechamento está acima da média.
+5. gera sinal de compra quando o fechamento está acima da média ou sinal de venda para abertura de posição vendida quando está abaixo.
 
 A regra é:
 
 ```text
-Fechamento do último candle encerrado > EMA 20 = sinal de alta
-Fechamento do último candle encerrado <= EMA 20 = nenhum sinal
+Fechamento do último candle encerrado > EMA 20 = COMPRA
+Fechamento do último candle encerrado < EMA 20 = VENDA (abrir posição vendida)
+Fechamento do último candle encerrado = EMA 20 = NEUTRO
 ```
 
-Enquanto o preço permanecer acima da EMA 20, cada nova execução poderá gerar outro alerta. Esse comportamento é intencional.
+Cada execução gera novamente a classificação correspondente enquanto o preço permanecer acima ou abaixo da EMA 20. Esse comportamento é intencional.
 
 No gráfico de 15 minutos, 20 candles representam aproximadamente cinco horas de mercado. Por ser exponencial, a EMA dá mais peso aos preços recentes.
 
@@ -110,7 +111,7 @@ python main.py
 ## Limitações conhecidas
 
 - a EMA 20 isolada pode gerar sinais falsos em mercados laterais;
-- alertas podem se repetir enquanto o fechamento permanecer acima da média;
+- alertas de compra ou venda podem se repetir enquanto o fechamento permanecer do mesmo lado da média;
 - não existe backtest incluído;
 - não há regras de stop-loss, alvo ou tamanho de posição;
 - não há prevenção de alertas duplicados;
