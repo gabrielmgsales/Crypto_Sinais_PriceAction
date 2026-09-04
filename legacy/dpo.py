@@ -2,7 +2,6 @@ import ccxt
 import pandas as pd
 import numpy as np
 import asyncio
-from telegram_notifier import send_telegram_message
 
 async def calculate_atr(df, period):
     df['high_low'] = df['high'] - df['low']
@@ -86,9 +85,9 @@ async def analyze_assets_async():
         for asset_signal in assets_with_signals:
             message += f"- {asset_signal}\n\n"
 
-        await send_telegram_message(message)
+        print(message)
     else:
-        await send_telegram_message("Nenhum ativo com sinal.")
+        print("Nenhum ativo com sinal.")
 
 async def run_analysis():
     await analyze_assets_async()
