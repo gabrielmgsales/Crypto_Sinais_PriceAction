@@ -129,7 +129,7 @@ python main.py
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
 - [ ] adicionar logs e tratamento de falhas;
-- [x] separar os scripts experimentais antigos em `legacy/`.
+- [x] separar os scripts experimentais antigos em `legacy/`;\n- [x] remover dependências não utilizadas e fixar as versões testadas.
 
 ## Licença
 

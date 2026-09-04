@@ -1,7 +1,4 @@
-pandas
-pandas-ta
-yfinance
-ccxt
-requests
-python-dotenv
-python-telegram-bot
+pandas==3.0.5
+ccxt==4.5.77
+python-dotenv==1.2.3
+python-telegram-bot==22.8
