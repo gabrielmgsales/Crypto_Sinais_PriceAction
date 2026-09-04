@@ -42,7 +42,7 @@ O projeto apenas consulta dados de mercado e gera alertas. Ele **não abre, alte
 
 ## Requisitos
 
-- Python 3.10 ou superior;
+- Python 3.11 ou superior;
 - acesso à internet;
 - uma conta e um bot do Telegram, apenas se quiser receber notificações.
 
@@ -116,8 +116,6 @@ python main.py
 - não há regras de stop-loss, alvo ou tamanho de posição;
 - não há prevenção de alertas duplicados;
 - não há testes automatizados;
-- as dependências ainda não possuem versões fixadas;
-- os scripts experimentais antigos ainda precisam de revisão.
 
 ## Próximas melhorias
 
@@ -130,7 +128,8 @@ python main.py
 - [ ] adicionar testes automatizados;
 - [ ] implementar backtest e métricas de desempenho;
 - [ ] adicionar logs e tratamento de falhas;
-- [x] separar os scripts experimentais antigos em `legacy/`;\n- [x] remover dependências não utilizadas e fixar as versões testadas.
+- [x] separar os scripts experimentais antigos em `legacy/`;
+- [x] remover dependências não utilizadas e fixar as versões testadas.
 
 ## Licença
 
