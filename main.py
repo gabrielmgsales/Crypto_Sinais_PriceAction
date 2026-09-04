@@ -51,13 +51,15 @@ def analyze_coin(coin_symbol):
         df = calculate_dmi(df, 14)
         df = calculate_dpo(df, 21)
 
-        current_plus_di = df['+DI'].iloc[-1]
-        current_minus_di = df['-DI'].iloc[-1]
-        previous_plus_di = df['+DI'].iloc[-2]
-        previous_minus_di = df['-DI'].iloc[-2]
+        # A última linha (-1) pode representar um candle ainda em formação.
+        # Comparamos somente os dois candles já encerrados.
+        current_plus_di = df['+DI'].iloc[-2]
+        current_minus_di = df['-DI'].iloc[-2]
+        previous_plus_di = df['+DI'].iloc[-3]
+        previous_minus_di = df['-DI'].iloc[-3]
 
-        current_dpo = df['dpo'].iloc[-1]
-        previous_dpo = df['dpo'].iloc[-2]
+        current_dpo = df['dpo'].iloc[-2]
+        previous_dpo = df['dpo'].iloc[-3]
 
         if all(
             pd.notnull(value)
